@@ -83,6 +83,16 @@
       "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
     },
 
+    "PublicLocation" : {
+      "Description" : "The IP address range that the coturn server will accept traffic (usually public)",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+
     "HostedZone" : {
       "Type" : "String",
       "Description" : "The DNS name of an existing Amazon Route 53 hosted zone",
@@ -155,24 +165,24 @@
     },
 
     "AWSRegionArch2AMI" : {
-      "us-east-1"        : {"HVM64" : "ami-0ff8a91507f77f867", "HVMG2" : "ami-0a584ac55a7631c0c"},
-      "us-west-2"        : {"HVM64" : "ami-a0cfeed8", "HVMG2" : "ami-0e09505bc235aa82d"},
-      "us-west-1"        : {"HVM64" : "ami-0bdb828fd58c52235", "HVMG2" : "ami-066ee5fd4a9ef77f1"},
-      "eu-west-1"        : {"HVM64" : "ami-047bb4163c506cd98", "HVMG2" : "ami-0a7c483d527806435"},
-      "eu-west-2"        : {"HVM64" : "ami-f976839e", "HVMG2" : "NOT_SUPPORTED"},
-      "eu-west-3"        : {"HVM64" : "ami-0ebc281c20e89ba4b", "HVMG2" : "NOT_SUPPORTED"},
-      "eu-central-1"     : {"HVM64" : "ami-0233214e13e500f77", "HVMG2" : "ami-06223d46a6d0661c7"},
-      "ap-northeast-1"   : {"HVM64" : "ami-06cd52961ce9f0d85", "HVMG2" : "ami-053cdd503598e4a9d"},
-      "ap-northeast-2"   : {"HVM64" : "ami-0a10b2721688ce9d2", "HVMG2" : "NOT_SUPPORTED"},
-      "ap-northeast-3"   : {"HVM64" : "ami-0d98120a9fb693f07", "HVMG2" : "NOT_SUPPORTED"},
-      "ap-southeast-1"   : {"HVM64" : "ami-08569b978cc4dfa10", "HVMG2" : "ami-0be9df32ae9f92309"},
-      "ap-southeast-2"   : {"HVM64" : "ami-09b42976632b27e9b", "HVMG2" : "ami-0a9ce9fecc3d1daf8"},
-      "ap-south-1"       : {"HVM64" : "ami-0912f71e06545ad88", "HVMG2" : "ami-097b15e89dbdcfcf4"},
-      "us-east-2"        : {"HVM64" : "ami-0b59bfac6be064b78", "HVMG2" : "NOT_SUPPORTED"},
-      "ca-central-1"     : {"HVM64" : "ami-0b18956f", "HVMG2" : "NOT_SUPPORTED"},
-      "sa-east-1"        : {"HVM64" : "ami-07b14488da8ea02a0", "HVMG2" : "NOT_SUPPORTED"},
-      "cn-north-1"       : {"HVM64" : "ami-0a4eaf6c4454eda75", "HVMG2" : "NOT_SUPPORTED"},
-      "cn-northwest-1"   : {"HVM64" : "ami-6b6a7d09", "HVMG2" : "NOT_SUPPORTED"}
+      "us-east-1"        : {"HVM64" : "ami-0ac019f4fcb7cb7e6"},
+      "us-west-2"        : {"HVM64" : "ami-0bbe6b35405ecebdb"},
+      "us-west-1"        : {"HVM64" : "ami-063aa838bd7631e0b"},
+      "eu-west-1"        : {"HVM64" : "ami-00035f41c82244dab"},
+      "eu-west-2"        : {"HVM64" : "ami-0b0a60c0a2bd40612"},
+      "eu-west-3"        : {"HVM64" : "ami-08182c55a1c188dee"},
+      "eu-central-1"     : {"HVM64" : "ami-0bdf93799014acdc4"},
+      "ap-northeast-1"   : {"HVM64" : "ami-06cd52961ce9f0d85"},
+      "ap-northeast-2"   : {"HVM64" : "ami-0a10b2721688ce9d2"},
+      "ap-northeast-3"   : {"HVM64" : "ami-0d98120a9fb693f07"},
+      "ap-southeast-1"   : {"HVM64" : "ami-08569b978cc4dfa10"},
+      "ap-southeast-2"   : {"HVM64" : "ami-09b42976632b27e9b"},
+      "ap-south-1"       : {"HVM64" : "ami-0912f71e06545ad88"},
+      "us-east-2"        : {"HVM64" : "ami-0b59bfac6be064b78"},
+      "ca-central-1"     : {"HVM64" : "ami-0b18956f"},
+      "sa-east-1"        : {"HVM64" : "ami-07b14488da8ea02a0"},
+      "cn-north-1"       : {"HVM64" : "ami-0a4eaf6c4454eda75"},
+      "cn-northwest-1"   : {"HVM64" : "ami-6b6a7d09"}
     }
 
   },
@@ -186,7 +196,30 @@
         "SecurityGroups" : [ { "Ref" : "InstanceSecurityGroup" } ],
         "KeyName" : { "Ref" : "KeyName" },
         "ImageId" : {"Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
-                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] }
+                          { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
+        "Tags": [ { "Key": "Name", "Value": { "Ref": "AWS::StackName" } } ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -xe\n",
+                "source /home/ubuntu/.bashrc\n",
+                "export HOME=/home/ubuntu\n",
+                "apt-get update\n",
+                "apt-get install coturn -y\n",
+                "echo TURNSERVER_ENABLED=1 >> /etc/default/coturn\n",
+                "echo external-ip=", { "Ref": "IPAddress" }, " >> /etc/turnserver.conf\n",
+                "echo fingerprint >> /etc/turnserver.conf\n",
+                "echo user=turn_user:turn_password >> /etc/turnserver.conf\n",
+                "echo lt-cred-mech >> /etc/turnserver.conf\n",
+                "echo realm=realm >> /etc/turnserver.conf\n",
+                "echo simple-log >> /etc/turnserver.conf\n",
+                "sudo service coturn restart"
+              ]
+            ]
+          }
+        }
       }
     },
 
@@ -199,6 +232,16 @@
           "FromPort" : "22",
           "ToPort" : "22",
           "CidrIp" : { "Ref" : "SSHLocation"}
+        }, {
+          "IpProtocol" : "tcp",
+          "FromPort" : "3478",
+          "ToPort" : "3478",
+          "CidrIp" : { "Ref" : "PublicLocation"}
+        }, {
+          "IpProtocol" : "udp",
+          "FromPort" : "3478",
+          "ToPort" : "3478",
+          "CidrIp" : { "Ref" : "PublicLocation"}
         }]
       }
     },
