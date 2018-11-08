@@ -8,12 +8,16 @@ The EC2 instance that is being deploy is being assigned with a Elastic Static IP
 This is the coturn configuration that is being created:
 
 **/etc/default/coturn**
+```
 TURNSERVER_ENABLED=1
+```
 
 **/etc/turnserver.conf**
-external-ip={aws_public_ip}
+```
+external-ip={aws_elastic_static_ip}
 fingerprint
-user={turn_user}:{turn_password}
+user=turn_user:turn_password
 lt-cred-mech
 realm=realm
 simple-log
+```
